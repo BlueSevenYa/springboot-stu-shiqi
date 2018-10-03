@@ -1,6 +1,7 @@
 package com.drools;
 
 import com.drools.model.Product;
+import org.kie.api.io.Resource;
 import org.kie.api.io.ResourceType;
 import org.kie.internal.KnowledgeBase;
 import org.kie.internal.KnowledgeBaseFactory;
@@ -29,10 +30,12 @@ public class DroolsTest1 {
     private void oldExecuteDrools() {
 
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
-        /*Resource ruleFile = ResourceFactory.newFileResource("classpath:com/rules/Rules.drl");
-        kbuilder.add(ruleFile,ResourceType.DRL);*/
+        Resource ruleFile = ResourceFactory.newFileResource("D:\\JetBrains\\springboot-stu-shiqi\\springboot-with-drools\\src\\main\\resources\\com.rules\\Rules.drl");
+        kbuilder.add(ruleFile,ResourceType.DRL);
+/*
         kbuilder.add(ResourceFactory.newClassPathResource("com/rules/Rules.drl",
-                this.getClass()), ResourceType.DRL);
+
+                this.getClass()), ResourceType.DRL);*/
         if (kbuilder.hasErrors()) {
             System.out.println(kbuilder.getErrors().toString());
         }
