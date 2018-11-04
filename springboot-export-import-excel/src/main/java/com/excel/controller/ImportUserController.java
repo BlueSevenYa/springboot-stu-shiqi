@@ -48,7 +48,7 @@ public class ImportUserController {
             return resp;
         }
         // 开始进行excel解析，进行数据校验，这一步基本保证了用户上传的模板是合法模板，也就是使用的提供的模板样式
-
+        ExcelUtil.importExcelDeal(workbook);
         resp.setCode(1);
         resp.setData(null);
         return resp;

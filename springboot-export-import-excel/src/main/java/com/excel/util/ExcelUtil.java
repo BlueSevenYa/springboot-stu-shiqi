@@ -147,7 +147,24 @@ public class ExcelUtil {
     }
 
     public static void importExcelDeal(Workbook workbook){
-
+        Sheet sheet = workbook.getSheetAt(0);
+        log.info(sheet.getLastRowNum()+"");
+        for(int i=notHeadExcelNum+1;i<=sheet.getLastRowNum();i++){
+            Row row= sheet.getRow(i);
+            int firstCellNum= row.getFirstCellNum();
+            int lastCellNum=row.getLastCellNum();
+            int pCellNum=row.getPhysicalNumberOfCells();
+            log.info(firstCellNum+ " " +lastCellNum +" " + pCellNum);
+            log.info(row.getCell(0).getStringCellValue());
+            for(int j=0;j<headName.length;j++){
+                Cell cell=row.getCell(j);
+                if(cell == null){
+                    log.info("null");
+                }else {
+                    log.info(cell.getStringCellValue());
+                }
+            }
+        }
     }
 
     /**
