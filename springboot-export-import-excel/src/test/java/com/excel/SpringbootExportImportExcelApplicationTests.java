@@ -122,12 +122,12 @@ public class SpringbootExportImportExcelApplicationTests {
 		//创建绘图对象
 		HSSFPatriarch p=sheet.createDrawingPatriarch();
 		//设置样式-颜色
-		HSSFCellStyle style = wb.createCellStyle();
+		HSSFCellStyle style = wb.createCellStyle();/*
 		style.setBorderBottom(CellStyle.BORDER_THIN);
 		style.setBorderRight(CellStyle.BORDER_THIN);
 		style.setBorderTop(CellStyle.BORDER_THIN);
 		style.setBorderLeft(CellStyle.BORDER_THIN);
-		style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
+		style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);*/
 		style.setFillForegroundColor(HSSFColor.YELLOW.index);
 		//创建单元格对象,批注插入到4行,1列,B5单元格
 		HSSFCell cell=sheet.createRow(4).createCell(1);

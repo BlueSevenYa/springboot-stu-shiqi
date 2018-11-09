@@ -1,8 +1,9 @@
 package com.excel.util;
 
+import com.excel.entity.ErrExcelUserData;
+import com.excel.entity.User;
 import com.excel.vo.ResultResp;
 import org.apache.poi.hssf.usermodel.*;
-import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
 import org.slf4j.Logger;
@@ -13,6 +14,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,8 +33,10 @@ public class ExcelUtil {
 
     public static final Integer notHeadExcelNum = 1; //非标题行行数
 
-    public static final String[] headName=new String[]{"*用户名","姓名","电话","邮箱","简介",
-            "限制密码数","限制Mac数","限制上行速度","限制下行速度","*密码策略",};
+    public static final String[] headName=new String[]{"*用户名","姓名","电话","邮箱","过期时间","*密码策略",
+            "限制密码数","限制Mac数","限制上行速度","限制下行速度","简介"};
+
+
 
 
     /**
@@ -147,6 +152,9 @@ public class ExcelUtil {
     }
 
     public static void importExcelDeal(Workbook workbook){
+        List<User> succUsers=new ArrayList<>();
+        List<ErrExcelUserData> errUsers=new ArrayList<>();
+
         Sheet sheet = workbook.getSheetAt(0);
         log.info(sheet.getLastRowNum()+"");
         for(int i=notHeadExcelNum+1;i<=sheet.getLastRowNum();i++){
@@ -164,7 +172,102 @@ public class ExcelUtil {
                     log.info(cell.getStringCellValue());
                 }
             }
+
+
         }
+    }
+
+
+    public static void getUserForRow(Row row,List<User> succUsers,List<ErrExcelUserData> errUsers){
+        Cell userNameCell = row.getCell(0);
+
+        Cell nameCell = row.getCell(1);
+
+        Cell phoneCell = row.getCell(2);
+
+        Cell email = row.getCell(3);
+
+        Cell expireTimeCell = row.getCell(4);
+
+        Cell pwdPolicyCell = row.getCell(5);
+
+        Cell limitPwdCell = row.getCell(6);
+
+        Cell limitMacCell = row.getCell(7);
+
+        Cell limitUpSpeedCell = row.getCell(8);
+
+        Cell limitDownSpeedCell = row.getCell(9);
+
+        Cell descCell = row.getCell(10);
+    }
+
+    public static String getCellValueByType(Cell cell){
+        String value="";
+        if(cell == null){
+            log.info("string value is null");
+        }else {
+            switch (cell.getCellTypeEnum()) {
+                case NUMERIC: // 数字
+                    //如果为时间格式的内容
+                    if (DateUtil.isCellDateFormatted(cell)) {
+                        //注：format格式 yyyy-MM-dd hh:mm:ss 中小时为12小时制，若要24小时制，则把小h变为H即可，yyyy-MM-dd HH:mm:ss
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                        value = sdf.format(HSSFDateUtil.getJavaDate(cell.getNumericCellValue())).toString();
+                        break;
+                    } else {
+                        //value = new DecimalFormat("0").format(cell.getNumericCellValue());
+                        value = String.valueOf(cell.getNumericCellValue());
+                        DecimalFormat df = new DecimalFormat("#.#########");
+                        value=df.format(Double.valueOf(value));
+                    }
+                    break;
+
+                /*if (HSSFDateUtil.isCellDateFormatted(cell)) {
+                    //如果是date类型则 ，获取该cell的date值
+                    Date date = HSSFDateUtil.getJavaDate(cell.getNumericCellValue());
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    value = format.format(date);;
+                }else {// 纯数字
+                    BigDecimal big=new BigDecimal(cell.getNumericCellValue());
+                    value = big.toString();
+                    //解决1234.0  去掉后面的.0
+                    if(null!=value&&!"".equals(value.trim())){
+                        String[] item = value.split("[.]");
+                        if(1<item.length&&"0".equals(item[1])){
+                            value=item[0];
+                        }
+                    }
+                }
+                break;*/
+                case STRING: // 字符串
+                    value = cell.getStringCellValue();
+                    break;
+                case BOOLEAN: // Boolean
+                    value = cell.getBooleanCellValue() + "";
+                    break;
+                /*value = " "+ cell.getBooleanCellValue();
+                break;*/
+                case FORMULA: // 公式
+                    value = cell.getCellFormula() + "";
+                    break;
+                /*value = String.valueOf(cell.getNumericCellValue());
+                if (value.equals("NaN")) {// 如果获取的数据值为非法值,则转换为获取字符串
+                    value = cell.getStringCellValue().toString();
+                }
+                break;*/
+                case BLANK: // 空值
+                    value = "";
+                    break;
+                case ERROR: // 故障
+                    value = "非法字符";
+                    break;
+                default:
+                    value = "未知类型";
+                    break;
+            }
+        }
+        return value;
     }
 
     /**
@@ -174,12 +277,12 @@ public class ExcelUtil {
      */
     public static CellStyle setCellStyle(Workbook workbook){
         CellStyle style = workbook.createCellStyle();
-        style.setBorderBottom(CellStyle.BORDER_THIN);
-        style.setBorderRight(CellStyle.BORDER_THIN);
-        style.setBorderTop(CellStyle.BORDER_THIN);
-        style.setBorderLeft(CellStyle.BORDER_THIN);
-        style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
-        style.setFillForegroundColor(HSSFColor.YELLOW.index);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setFillForegroundColor(IndexedColors.YELLOW.index);
         return style;
     }
 
