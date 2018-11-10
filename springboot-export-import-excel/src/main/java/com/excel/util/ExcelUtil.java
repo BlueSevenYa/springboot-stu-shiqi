@@ -308,50 +308,27 @@ public class ExcelUtil {
                     //如果为时间格式的内容
                     if (DateUtil.isCellDateFormatted(cell)) {
                         //注：format格式 yyyy-MM-dd hh:mm:ss 中小时为12小时制，若要24小时制，则把小h变为H即可，yyyy-MM-dd HH:mm:ss
+                        Date date = HSSFDateUtil.getJavaDate(cell.getNumericCellValue());
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-                        value = sdf.format(HSSFDateUtil.getJavaDate(cell.getNumericCellValue())).toString();
+                        value = sdf.format(date).toString();
                         break;
                     } else {
-                        //value = new DecimalFormat("0").format(cell.getNumericCellValue());
                         value = String.valueOf(cell.getNumericCellValue());
                         DecimalFormat df = new DecimalFormat("#.#########");
                         value=df.format(Double.valueOf(value));
                     }
                     break;
 
-                /*if (HSSFDateUtil.isCellDateFormatted(cell)) {
-                    //如果是date类型则 ，获取该cell的date值
-                    Date date = HSSFDateUtil.getJavaDate(cell.getNumericCellValue());
-                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    value = format.format(date);;
-                }else {// 纯数字
-                    BigDecimal big=new BigDecimal(cell.getNumericCellValue());
-                    value = big.toString();
-                    //解决1234.0  去掉后面的.0
-                    if(null!=value&&!"".equals(value.trim())){
-                        String[] item = value.split("[.]");
-                        if(1<item.length&&"0".equals(item[1])){
-                            value=item[0];
-                        }
-                    }
-                }
-                break;*/
                 case STRING: // 字符串
                     value = cell.getStringCellValue();
                     break;
                 case BOOLEAN: // Boolean
                     value = cell.getBooleanCellValue() + "";
                     break;
-                /*value = " "+ cell.getBooleanCellValue();
-                break;*/
+
                 case FORMULA: // 公式
                     value = cell.getCellFormula() + "";
                     break;
-                /*value = String.valueOf(cell.getNumericCellValue());
-                if (value.equals("NaN")) {// 如果获取的数据值为非法值,则转换为获取字符串
-                    value = cell.getStringCellValue().toString();
-                }
-                break;*/
                 case BLANK: // 空值
                     value = "";
                     break;
