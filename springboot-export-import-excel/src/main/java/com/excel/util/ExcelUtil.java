@@ -150,6 +150,10 @@ public class ExcelUtil {
         }
     }
 
+    /**
+     * 处理导入逻辑
+     * @param workbook
+     */
     public static void importExcelDeal(Workbook workbook){
         List<User> succUsers=new ArrayList<>();
         List<ErrExcelUserData> errUsers=new ArrayList<>();
@@ -159,18 +163,7 @@ public class ExcelUtil {
         log.info(sheet.getLastRowNum()+"");
         for(int i=notHeadExcelNum+1;i<=sheet.getLastRowNum();i++){
             Row row= sheet.getRow(i);
-            int firstCellNum= row.getFirstCellNum();
-            int lastCellNum=row.getLastCellNum();
-            int pCellNum=row.getPhysicalNumberOfCells();
-            log.info(firstCellNum+ " " +lastCellNum +" " + pCellNum);
-            /*for(int j=0;j<headName.length;j++){
-                Cell cell=row.getCell(j);
-                if(cell == null){
-                    log.info("null");
-                }else {
-                    log.info(cell.getStringCellValue());
-                }
-            }*/
+            log.info(row.getFirstCellNum()+ " " +row.getLastCellNum() +" " + row.getPhysicalNumberOfCells());
 
             getUserForRow(row,succUsers,errUsers,userNameSet);
         }
@@ -193,6 +186,14 @@ public class ExcelUtil {
     }
 
 
+    /**
+     * 处理校验每一行的数据
+     * @param row
+     * @param succUsers
+     * @param errUsers
+     * @param userNameSet
+     * @return
+     */
     public static boolean getUserForRow(Row row,List<User> succUsers,List<ErrExcelUserData> errUsers,Set<String> userNameSet){
         Cell userNameCell = row.getCell(0);
         String originUserName = getCellValueByType(userNameCell);
@@ -284,6 +285,11 @@ public class ExcelUtil {
     }
 
 
+    /**
+     * 判断Cell的类型是否是数字或者字符串
+     * @param cell
+     * @return
+     */
     public static boolean checkCellTypeIsStringOrNum(Cell cell){
         if(cell.getCellTypeEnum()!= CellType.STRING && cell.getCellTypeEnum() != CellType.NUMERIC){
             return false;
@@ -292,12 +298,25 @@ public class ExcelUtil {
         }
     }
 
+    /**
+     * 封装添加错误RowUser到list
+     * @param errUsers
+     * @param errRowUserData
+     * @param cellNum
+     * @param errMsg
+     * @param property
+     */
     public static void addErrRowUserToList(List<ErrExcelUserData> errUsers,ErrRowUserData errRowUserData,Integer cellNum,String errMsg,String property){
         ErrExcelUserData errExcelUserData=new ErrExcelUserData(errRowUserData,cellNum,errMsg,property);
         errUsers.add(errExcelUserData);
     }
 
 
+    /**
+     * 得到excel 数据的原始值，转成String类型
+     * @param cell
+     * @return
+     */
     public static String getCellValueByType(Cell cell){
         String value="";
         if(cell == null){
