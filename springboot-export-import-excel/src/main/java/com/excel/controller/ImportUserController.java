@@ -45,6 +45,7 @@ public class ImportUserController {
         if(!ExcelUtil.checkTemplateRight(workbook,ExcelUtil.notHeadExcelNum,ExcelUtil.headName)){
             resp.setCode(0);
             resp.setMessage("非法模板");
+            resp.setData(null);
             return resp;
         }
         // 开始进行excel解析，进行数据校验，这一步基本保证了用户上传的模板是合法模板，也就是使用的提供的模板样式

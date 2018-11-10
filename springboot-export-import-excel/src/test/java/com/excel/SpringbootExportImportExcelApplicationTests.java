@@ -180,4 +180,14 @@ public class SpringbootExportImportExcelApplicationTests {
 		out.close();
 	}
 
+	@Test
+	public void test9(){
+		String s="000a";
+		if(s.matches(ExcelUtil.regUserName)){
+			log.info("true");
+		}else{
+			log.info("false");
+		}
+	}
+
 }

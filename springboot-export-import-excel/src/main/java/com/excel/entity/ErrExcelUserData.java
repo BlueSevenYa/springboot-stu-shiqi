@@ -11,11 +11,21 @@ public class ErrExcelUserData {
 
     private ErrRowUserData errRowUserData;
 
+    private Integer cellNum;
+
     private String errMsg;
 
     private String property;
 
-    private Integer cellNum;
+    public ErrExcelUserData() {
+    }
+
+    public ErrExcelUserData(ErrRowUserData errRowUserData, Integer cellNum, String errMsg, String property) {
+        this.errRowUserData = errRowUserData;
+        this.cellNum = cellNum;
+        this.errMsg = errMsg;
+        this.property = property;
+    }
 
     @Override
     public String toString() {

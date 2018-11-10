@@ -1,7 +1,5 @@
 package com.excel.vo;
 
-import java.io.Serializable;
-
 /**
  * Created by
  *
@@ -9,7 +7,7 @@ import java.io.Serializable;
  * @on 2018-11-02-22:17
  */
 
-public class ResultResp<T> implements Serializable{
+public class ResultResp<T>{
 
     private Integer code;
 

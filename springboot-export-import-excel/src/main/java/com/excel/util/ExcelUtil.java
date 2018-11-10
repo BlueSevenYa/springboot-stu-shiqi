@@ -1,6 +1,7 @@
 package com.excel.util;
 
 import com.excel.entity.ErrExcelUserData;
+import com.excel.entity.ErrRowUserData;
 import com.excel.entity.User;
 import com.excel.vo.ResultResp;
 import org.apache.poi.hssf.usermodel.*;
@@ -16,9 +17,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by
@@ -34,9 +33,9 @@ public class ExcelUtil {
     public static final Integer notHeadExcelNum = 1; //非标题行行数
 
     public static final String[] headName=new String[]{"*用户名","姓名","电话","邮箱","过期时间","*密码策略",
-            "限制密码数","限制Mac数","限制上行速度","限制下行速度","简介"};
+            "限制密码数","限制Mac数","限制上行速度","限制下行速度","备注"};
 
-
+    public static final String regUserName = "^[0-9a-z]{4,8}$"; // 用户名正则
 
 
     /**
@@ -154,6 +153,7 @@ public class ExcelUtil {
     public static void importExcelDeal(Workbook workbook){
         List<User> succUsers=new ArrayList<>();
         List<ErrExcelUserData> errUsers=new ArrayList<>();
+        Set<String> userNameSet =new HashSet<>();
 
         Sheet sheet = workbook.getSheetAt(0);
         log.info(sheet.getLastRowNum()+"");
@@ -163,44 +163,140 @@ public class ExcelUtil {
             int lastCellNum=row.getLastCellNum();
             int pCellNum=row.getPhysicalNumberOfCells();
             log.info(firstCellNum+ " " +lastCellNum +" " + pCellNum);
-            log.info(row.getCell(0).getStringCellValue());
-            for(int j=0;j<headName.length;j++){
+            /*for(int j=0;j<headName.length;j++){
                 Cell cell=row.getCell(j);
                 if(cell == null){
                     log.info("null");
                 }else {
                     log.info(cell.getStringCellValue());
                 }
-            }
+            }*/
+
+            getUserForRow(row,succUsers,errUsers,userNameSet);
+        }
+
+        if(errUsers.size() != 0){
+            errUsers.forEach(errUser->{
+                log.info(errUser.toString());
+            });
+        }
+        log.info("end =================end errUsers");
+        if(succUsers.size() != 0){
+            succUsers.forEach(succUser->{
+                log.info(succUser.toString());
+            });
+        }
+        log.info("end =================end succUsers");
+        userNameSet.forEach(unames->{
+            log.info(unames);
+        });
+    }
 
 
+    public static boolean getUserForRow(Row row,List<User> succUsers,List<ErrExcelUserData> errUsers,Set<String> userNameSet){
+        Cell userNameCell = row.getCell(0);
+        String originUserName = getCellValueByType(userNameCell);
+        log.info(originUserName);
+
+        Cell nameCell = row.getCell(1);
+        String originName = getCellValueByType(nameCell);
+        log.info(originName);
+
+        Cell phoneCell = row.getCell(2);
+        String originPhone = getCellValueByType(phoneCell);
+        log.info(originPhone);
+
+        Cell emailCell = row.getCell(3);
+        String originEmail = getCellValueByType(emailCell);
+        log.info(originEmail);
+
+        Cell expireTimeCell = row.getCell(4);
+        String originExpireTime = getCellValueByType(expireTimeCell);
+        log.info(originExpireTime);
+
+        Cell pwdPolicyCell = row.getCell(5);
+        String originPwdPolicy = getCellValueByType(pwdPolicyCell);
+        log.info(originPwdPolicy);
+
+        Cell limitPwdCell = row.getCell(6);
+        String originLimitPwd = getCellValueByType(limitPwdCell);
+        log.info(originLimitPwd);
+
+        Cell limitMacCell = row.getCell(7);
+        String originLimitMac = getCellValueByType(limitMacCell);
+        log.info(originLimitMac);
+
+        Cell limitUpSpeedCell = row.getCell(8);
+        String originLimitUpSpeed = getCellValueByType(limitUpSpeedCell);
+        log.info(originLimitUpSpeed);
+
+        Cell limitDownSpeedCell = row.getCell(9);
+        String originLimitDownSpeed = getCellValueByType(limitDownSpeedCell);
+        log.info(originLimitDownSpeed);
+
+        Cell descCell = row.getCell(10);
+        String originDesc = getCellValueByType(descCell);
+        log.info(originDesc);
+
+        boolean isHaveErrData = false;
+
+        if(userNameCell == null){
+            ErrRowUserData errRowUserData=new ErrRowUserData(originUserName,originName,originPhone,originEmail,originExpireTime,
+                    originPwdPolicy,originLimitPwd,originLimitMac,originLimitUpSpeed,originLimitDownSpeed,originDesc);
+            addErrRowUserToList(errUsers,errRowUserData,0,"字段不能为空","username");
+            log.info("username maybe is null");
+            isHaveErrData=true;
+        }else if(!checkCellTypeIsStringOrNum(userNameCell)){
+            ErrRowUserData errRowUserData=new ErrRowUserData(originUserName,originName,originPhone,originEmail,originExpireTime,
+                    originPwdPolicy,originLimitPwd,originLimitMac,originLimitUpSpeed,originLimitDownSpeed,originDesc);
+            addErrRowUserToList(errUsers,errRowUserData,0,"字段类型错误","username");
+            log.info("username maybe is wrong type");
+            isHaveErrData=true;
+        }else if(!originUserName.matches(regUserName)){
+            ErrRowUserData errRowUserData=new ErrRowUserData(originUserName,originName,originPhone,originEmail,originExpireTime,
+                    originPwdPolicy,originLimitPwd,originLimitMac,originLimitUpSpeed,originLimitDownSpeed,originDesc);
+            addErrRowUserToList(errUsers,errRowUserData,0,"字段格式错误","username");
+            log.info("username maybe is wrong reg");
+            isHaveErrData=true;
+        }else if(userNameSet.contains(originUserName)){
+            //进行excel用户名重复校验
+            ErrRowUserData errRowUserData=new ErrRowUserData(originUserName,originName,originPhone,originEmail,originExpireTime,
+                    originPwdPolicy,originLimitPwd,originLimitMac,originLimitUpSpeed,originLimitDownSpeed,originDesc);
+            addErrRowUserToList(errUsers,errRowUserData,0,"表格中用户名重复","username");
+            log.info("username maybe is repeat in excel");
+            isHaveErrData=true;
+        }else if(true){
+            // 进行数据库层面用户名重复校验
+
+            log.info("username maybe is repeat in db");
+        }
+        // 一旦校验到错误，就不在接着往下校验
+        if(isHaveErrData){
+            return isHaveErrData;
+        }
+
+        User user = new User();
+        user.setName("success" +row.getRowNum());
+        succUsers.add(user);
+        userNameSet.add(originUserName);
+
+        return isHaveErrData;
+    }
+
+
+    public static boolean checkCellTypeIsStringOrNum(Cell cell){
+        if(cell.getCellTypeEnum()!= CellType.STRING && cell.getCellTypeEnum() != CellType.NUMERIC){
+            return false;
+        }else{
+            return true;
         }
     }
 
-
-    public static void getUserForRow(Row row,List<User> succUsers,List<ErrExcelUserData> errUsers){
-        Cell userNameCell = row.getCell(0);
-
-        Cell nameCell = row.getCell(1);
-
-        Cell phoneCell = row.getCell(2);
-
-        Cell email = row.getCell(3);
-
-        Cell expireTimeCell = row.getCell(4);
-
-        Cell pwdPolicyCell = row.getCell(5);
-
-        Cell limitPwdCell = row.getCell(6);
-
-        Cell limitMacCell = row.getCell(7);
-
-        Cell limitUpSpeedCell = row.getCell(8);
-
-        Cell limitDownSpeedCell = row.getCell(9);
-
-        Cell descCell = row.getCell(10);
+    public static void addErrRowUserToList(List<ErrExcelUserData> errUsers,ErrRowUserData errRowUserData,Integer cellNum,String errMsg,String property){
+        ErrExcelUserData errExcelUserData=new ErrExcelUserData(errRowUserData,cellNum,errMsg,property);
+        errUsers.add(errExcelUserData);
     }
+
 
     public static String getCellValueByType(Cell cell){
         String value="";

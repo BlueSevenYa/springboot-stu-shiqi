@@ -17,7 +17,9 @@ public class ErrRowUserData {
 
     private String email;
 
-    private String desc;
+    private String expireTime;
+
+    private String pwdPolicy;
 
     private String limitPwd;
 
@@ -27,9 +29,24 @@ public class ErrRowUserData {
 
     private String limitDownSpeed;
 
-    private String pwdPolicy;
+    private String desc;
 
-    private String expireTime;
+    public ErrRowUserData() {
+    }
+
+    public ErrRowUserData(String username, String name, String phone, String email, String expireTime, String pwdPolicy, String limitPwd, String limitMac, String limitUpSpeed, String limitDownSpeed, String desc) {
+        this.username = username;
+        this.name = name;
+        this.phone = phone;
+        this.email = email;
+        this.expireTime = expireTime;
+        this.pwdPolicy = pwdPolicy;
+        this.limitPwd = limitPwd;
+        this.limitMac = limitMac;
+        this.limitUpSpeed = limitUpSpeed;
+        this.limitDownSpeed = limitDownSpeed;
+        this.desc = desc;
+    }
 
     @Override
     public String toString() {
@@ -38,13 +55,13 @@ public class ErrRowUserData {
                 ", name='" + name + '\'' +
                 ", phone='" + phone + '\'' +
                 ", email='" + email + '\'' +
-                ", desc='" + desc + '\'' +
+                ", expireTime='" + expireTime + '\'' +
+                ", pwdPolicy='" + pwdPolicy + '\'' +
                 ", limitPwd='" + limitPwd + '\'' +
                 ", limitMac='" + limitMac + '\'' +
                 ", limitUpSpeed='" + limitUpSpeed + '\'' +
                 ", limitDownSpeed='" + limitDownSpeed + '\'' +
-                ", pwdPolicy='" + pwdPolicy + '\'' +
-                ", expireTime='" + expireTime + '\'' +
+                ", desc='" + desc + '\'' +
                 '}';
     }
 
