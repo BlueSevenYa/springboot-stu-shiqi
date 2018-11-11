@@ -276,9 +276,9 @@ public class ExcelUtil {
                 }
             }
             if(colNum == 0){
-                sheet.setColumnWidth(colNum, (columnWidth-2) * 256);
-            }else{
                 sheet.setColumnWidth(colNum, (columnWidth+4) * 256);
+            }else{
+                sheet.setColumnWidth(colNum, (columnWidth+8) * 256);
             }
         }
 
