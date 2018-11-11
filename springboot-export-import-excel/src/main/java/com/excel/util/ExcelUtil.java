@@ -7,11 +7,12 @@ import com.excel.vo.ResultResp;
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
+import javax.swing.filechooser.FileSystemView;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -36,6 +37,13 @@ public class ExcelUtil {
             "限制密码数","限制Mac数","限制上行速度","限制下行速度","备注"};
 
     public static final String regUserName = "^[0-9a-z]{4,8}$"; // 用户名正则
+
+    public static final String[] tipsMsg = new String[]{
+            "*代表必填项。",
+            "1. msg1",
+            "2. msg2",
+            "3. msg3"
+    };
 
 
     /**
@@ -183,8 +191,120 @@ public class ExcelUtil {
         userNameSet.forEach(unames->{
             log.info(unames);
         });
+
+        exportExcelDeal(errUsers);
     }
 
+
+    public static void exportExcelDeal(List<ErrExcelUserData> errUsers){
+        HSSFWorkbook workbook = new HSSFWorkbook();
+        HSSFSheet sheet = workbook.createSheet("错误数据");
+        //创建绘图对象
+        HSSFPatriarch p=sheet.createDrawingPatriarch();
+
+        CellRangeAddress region = new CellRangeAddress(0,0,0,10);
+        sheet.addMergedRegion(region);
+
+        Row firstRow = sheet.createRow(0);
+        firstRow.setHeightInPoints((short) (80));
+
+        Font firstRowFont = workbook.createFont();
+        firstRowFont.setFontName("宋体");
+        firstRowFont.setFontHeightInPoints((short) 11);
+
+        CellStyle firstRowStyle = workbook.createCellStyle();
+        firstRowStyle.setWrapText(true); // 设置自动换行
+        firstRowStyle.setAlignment(HorizontalAlignment.LEFT);
+        firstRowStyle.setVerticalAlignment(VerticalAlignment.TOP);
+        firstRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        firstRowStyle.setFillForegroundColor(IndexedColors.LIGHT_GREEN.index);
+        firstRowStyle.setFont(firstRowFont);
+
+        Cell firstRowCell = firstRow.createCell(0);
+        StringBuilder sb = new StringBuilder();
+        for (String s : tipsMsg) {
+            sb.append(s).append("\r\n");
+        }
+        HSSFRichTextString richString = new HSSFRichTextString(sb.toString().trim());
+        Font redFont = workbook.createFont();
+        redFont.setColor(IndexedColors.RED.index);
+        redFont.setFontHeightInPoints((short) 11);
+        redFont.setFontName("宋体");
+        richString.applyFont(0,1,redFont);
+        richString.applyFont(1,richString.length()-1,firstRowFont);
+        firstRowCell.setCellStyle(firstRowStyle);
+        firstRowCell.setCellValue(richString);
+
+
+        Row secondRow =sheet.createRow(1);
+        for(int i=0;i<headName.length;i++){
+            Font font = workbook.createFont();
+            font.setFontName("宋体");
+            font.setFontHeightInPoints((short) 12);
+            font.setBold(true);
+
+            CellStyle cellStyle = workbook.createCellStyle();
+            cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            cellStyle.setFillForegroundColor(IndexedColors.LIGHT_BLUE.index);
+            cellStyle.setFont(font);
+            Cell cell=secondRow.createCell(i);
+            cell.setCellValue(headName[i]);
+            cell.setCellStyle(cellStyle);
+        }
+
+
+
+        //让列宽随着导出的列长自动适应
+        for (int colNum = 0; colNum < headName.length; colNum++) {
+            int columnWidth = sheet.getColumnWidth(colNum) / 256;
+            for (int rowNum = 1; rowNum < sheet.getLastRowNum(); rowNum++) {
+                HSSFRow currentRow;
+                //当前行未被使用过
+                if (sheet.getRow(rowNum) == null) {
+                    currentRow = sheet.createRow(rowNum);
+                } else {
+                    currentRow = sheet.getRow(rowNum);
+                }
+                if (currentRow.getCell(colNum) != null) {
+                    HSSFCell currentCell = currentRow.getCell(colNum);
+                    if (currentCell.getCellTypeEnum() == CellType.STRING) {
+                        int length = currentCell.getStringCellValue().getBytes().length;
+                        if (columnWidth < length) {
+                            columnWidth = length;
+                        }
+                    }
+                }
+            }
+            if(colNum == 0){
+                sheet.setColumnWidth(colNum, (columnWidth-2) * 256);
+            }else{
+                sheet.setColumnWidth(colNum, (columnWidth+4) * 256);
+            }
+        }
+
+
+        //创建输出流
+        FileOutputStream out=null;
+        FileSystemView fsv = FileSystemView.getFileSystemView();
+        File com=fsv.getHomeDirectory();    //读取桌面路径
+        String deskTopPath = com.getPath();
+        String filePath = deskTopPath +"\\"+"errUserData.xls";
+        try {
+            out=new FileOutputStream(filePath);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            workbook.write(out);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * 处理校验每一行的数据
@@ -218,22 +338,32 @@ public class ExcelUtil {
         Cell pwdPolicyCell = row.getCell(5);
         String originPwdPolicy = getCellValueByType(pwdPolicyCell);
         log.info(originPwdPolicy);
+        int pwdPolicy = getNumValue(pwdPolicyCell);
+        log.info(pwdPolicy + "is after changing");
 
         Cell limitPwdCell = row.getCell(6);
         String originLimitPwd = getCellValueByType(limitPwdCell);
         log.info(originLimitPwd);
+        int limitPwd = getNumValue(limitPwdCell);
+        log.info(limitPwd + "is after changing");
 
         Cell limitMacCell = row.getCell(7);
         String originLimitMac = getCellValueByType(limitMacCell);
         log.info(originLimitMac);
+        int limitMac = getNumValue(limitMacCell);
+        log.info(limitMac + "is after changing");
 
         Cell limitUpSpeedCell = row.getCell(8);
         String originLimitUpSpeed = getCellValueByType(limitUpSpeedCell);
         log.info(originLimitUpSpeed);
+        int limitUpSpeed = getNumValue(limitUpSpeedCell);
+        log.info(limitUpSpeed + "is after changing");
 
         Cell limitDownSpeedCell = row.getCell(9);
         String originLimitDownSpeed = getCellValueByType(limitDownSpeedCell);
         log.info(originLimitDownSpeed);
+        int limitDownSpeed = getNumValue(limitDownSpeedCell);
+        log.info(limitDownSpeed + "is after changing");
 
         Cell descCell = row.getCell(10);
         String originDesc = getCellValueByType(descCell);
@@ -241,6 +371,7 @@ public class ExcelUtil {
 
         boolean isHaveErrData = false;
 
+        // 用户名校验
         if(userNameCell == null){
             ErrRowUserData errRowUserData=new ErrRowUserData(originUserName,originName,originPhone,originEmail,originExpireTime,
                     originPwdPolicy,originLimitPwd,originLimitMac,originLimitUpSpeed,originLimitDownSpeed,originDesc);
@@ -276,6 +407,36 @@ public class ExcelUtil {
             return isHaveErrData;
         }
 
+        // 密码策略校验
+        if(pwdPolicyCell == null){
+            ErrRowUserData errRowUserData=new ErrRowUserData(originUserName,originName,originPhone,originEmail,originExpireTime,
+                    originPwdPolicy,originLimitPwd,originLimitMac,originLimitUpSpeed,originLimitDownSpeed,originDesc);
+            addErrRowUserToList(errUsers,errRowUserData,5,"字段不能为空","pwdPolicy");
+            log.info("pwdPolicy maybe is null");
+            isHaveErrData=true;
+        }else if(!checkCellTypeIsNum(pwdPolicyCell)){
+            ErrRowUserData errRowUserData=new ErrRowUserData(originUserName,originName,originPhone,originEmail,originExpireTime,
+                    originPwdPolicy,originLimitPwd,originLimitMac,originLimitUpSpeed,originLimitDownSpeed,originDesc);
+            addErrRowUserToList(errUsers,errRowUserData,5,"字段类型错误","pwdPolicy");
+            log.info("pwdPolicy maybe wrong type");
+            isHaveErrData=true;
+        }else if(originPwdPolicy.indexOf(".") != -1){
+            ErrRowUserData errRowUserData=new ErrRowUserData(originUserName,originName,originPhone,originEmail,originExpireTime,
+                    originPwdPolicy,originLimitPwd,originLimitMac,originLimitUpSpeed,originLimitDownSpeed,originDesc);
+            addErrRowUserToList(errUsers,errRowUserData,5,"字段格式错误","pwdPolicy");
+            log.info("pwdPolicy maybe wrong geshi");
+            isHaveErrData=true;
+        } else if (pwdPolicy <1 || pwdPolicy >3){
+            ErrRowUserData errRowUserData=new ErrRowUserData(originUserName,originName,originPhone,originEmail,originExpireTime,
+                    originPwdPolicy,originLimitPwd,originLimitMac,originLimitUpSpeed,originLimitDownSpeed,originDesc);
+            addErrRowUserToList(errUsers,errRowUserData,5,"字段范围错误","pwdPolicy");
+            log.info("pwdPolicy maybe wrong range");
+            isHaveErrData=true;
+        }
+        if(isHaveErrData){
+            return isHaveErrData;
+        }
+
         User user = new User();
         user.setName("success" +row.getRowNum());
         succUsers.add(user);
@@ -284,6 +445,16 @@ public class ExcelUtil {
         return isHaveErrData;
     }
 
+
+    public static int getNumValue(Cell cell){
+        if(cell == null){
+            return 0;
+        }
+        if(!checkCellTypeIsNum(cell)){
+            return 0;
+        }
+        return (int) cell.getNumericCellValue();
+    }
 
     /**
      * 判断Cell的类型是否是数字或者字符串
@@ -295,6 +466,20 @@ public class ExcelUtil {
             return false;
         }else{
             return true;
+        }
+    }
+
+
+    /**
+     * 判断Cell的类型是数字并且不是日期
+     * @param cell
+     * @return
+     */
+    public static boolean checkCellTypeIsNum(Cell cell){
+        if(cell.getCellTypeEnum() == CellType.NUMERIC && !DateUtil.isCellDateFormatted(cell)){
+            return true;
+        }else{
+            return false;
         }
     }
 
